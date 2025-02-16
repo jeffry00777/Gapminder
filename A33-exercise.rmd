@@ -1,0 +1,106 @@
+---
+title: "A3.3 Gapminder"
+author: "Jeffry Livingston"
+date: "02/03/2025"
+output: pdf_document
+---
+
+# Task 1: Reflection
+
+One of the most significant challenges in achieving data visualizations that depict uncertainty is effectively communicating the chance of many outcomes to non-statistical persons. Claus Wilke places emphasis on the clear and complex ‘middle ground’ and the Harvard Business Review mentions the challenge of correctly depicting uncertainty. EagerEyes shows indecision, especially in critical situations, stems from Poor Visual Representation of Uncertainty.
+
+Amanda Cox’s keynote sheds light on new forms of communicating uncertainty, such as animated sequences of alternative outcomes, that can ease audience comprehension of uncertainty. They all have in common, the goal of providing effective understanding of the context without ambiguity.
+
+That ties back to my task concerning overconfidence in an ambiguous conclusion or delaying actions that require immediacy due to low certainty. It makes me reconsider how confidence in the conclusions we draw is communicated in data visualization at work so that it inspires the right level of action without improper assumptions.
+
+
+
+# Task 2: Visualizing uncertainty with gapminder
+
+For this exercise you'll revisit Hans Rosling's gapminder data on health and wealth. Install the **gapminder** package if you haven't already. Also install the **ggridges** and **gghalves** packages.
+
+```{r load-libraries-data, warning=FALSE, message=FALSE}
+library(tidyverse)  # For ggplot, dplyr, and friends
+library(gapminder)  # For health/wealth data
+library(ggridges)   # For ridge plots
+library(gghalves)   # For half geoms
+```
+
+## Histograms
+
+Make a histogram of *logged* GDP per capita for 1997 only, across all five continents. 
+
+```{r filter-gapminder-1997}
+# Create a filtered dataset
+df_1997 <- gapminder %>%
+  filter(year == 1997) 
+
+```
+
+```{r plot-histogram}
+# Make a histogram of logged GDP per capita for 1997 only, across all five continents
+ggplot(df_1997, aes(x = log10(gdpPercap), fill = continent)) +
+  geom_histogram(bins = 15, alpha = 0.7) +
+  scale_x_log10() +
+  facet_wrap(~ continent) +
+  labs(title = "Histogram of Log-Transformed GDP per Capita (1997) by Continent",
+       x = "Log-Transformed GDP per Capita",
+       y = "Total") +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Set1")
+```
+This histogram shows the distribution of log-transformed GDP per capita across continents in the year 1997. The logarithmic transformation makes differences more obvious, because data shows strong right skew. The distribution suggests that Africa and Asia have relatively low per-capita GDP values, while the values for Europe and Oceania are considerably higher.
+
+## Densities
+
+Make a ridge plot of life expectancy over time, from 1952 to 2007. You'll need to use the full gapminder data, not the 1997-only data.
+
+```{r plot-ridgeplot}
+# Make a ridge plot of global life expectancy over time, from 1952 to 2007.
+# Add a ridge plot here
+
+ ggplot(gapminder, aes(x = lifeExp, y = factor(year), fill = factor(year))) +
+  geom_density_ridges() +
+  scale_fill_viridis_d(option = "turbo") +  # Turbo provides bright, vibrant colors
+  labs(title = "Ridge Plot of Global Life Expectancy Trends (1952-2007)",
+       x = "Life Expectancy",
+       y = "Year") +
+  theme_ridges() + 
+  theme(legend.position = "none",
+        axis.title.x = element_text(hjust = 0.5, face = "bold", color = "black", size = 14),
+        axis.title.y = element_text(hjust = 0.5, face = "bold", color = "black", size = 14),
+        plot.title = element_text(face = "bold", size = 16, color = "darkred"))
+
+
+```
+This ridge plot shows the global trend in life expectancy over time. Each ridge represents a year and plots the distribution of life expectancy along with its central tendencies and variability. The peaks are seen to consistently shift to the right, indicating steadily increasing life expectancy between 1952 and 2007. Color is used to assist in interpretation lighter shades indicate higher values of life expectancy.
+
+## Boxes, violins, and others
+
+Make a filtered dataset that selects data from only 2007 *and* removes Oceania. Show the distribution of *logged* GDP per capita across the *four* continents using some combination of boxplots and/or violin plots and/or strip plots, either overlaid on top of each other, or using their `geom_half_*()` counterparts from **gghalves**.
+
+```{r filter-gapminder-2007-sans-oceania}
+gapminder_2007_sans_oceania <- gapminder %>%
+  filter(year == 2007, continent != "Oceania")
+```
+
+```{r plot-distribution}
+# the distribution of logged GDP per capita across the four continents
+# Add a plot here. You'll want to use either scale_x_log10() or scale_y_log10(),
+# depending on which direction your boxplots/violin plots/etc.
+
+ggplot(gapminder_2007_sans_oceania, aes(x = continent, y = log(gdpPercap), fill = continent)) +
+  geom_violin(alpha = 0.6) +    
+  geom_boxplot(width = 0.3, outlier.shape = NA, alpha = 0.8) +  
+  geom_half_point(side = "l", alpha = 0.7) + 
+  scale_y_log10() +  
+  scale_fill_viridis_d(option = "C") + 
+  labs(title = "Logged GDP per Capita Distribution in 2007 (Oceania Excluded)",
+       x = "Continent",
+       y = "Log-Scaled GDP per Capita") +
+  theme_minimal()
+
+
+```
+This violin compares the log-transformed GDP per capita across four continents in 2007. The violin plots represent the density distribution, and the boxplots highlight the median, quartiles, and outliers. Africa has the lowest GDP per capita, with a left-skewed distribution, whereas the Americas and Asia exhibit greater variability. In contrast, Europe stands out with a higher median GDP per capita. In addition, strip plots per country are available to provide further detail on distribution.
+
